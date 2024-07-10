@@ -869,11 +869,10 @@ class Trainer:
                 dataset=self.train_dataset,
                 lengths=lengths,
                 model_input_name=model_input_name,
-                generator=torch.Generator(device=self.args.device),
             )
 
         else:
-            return RandomSampler(self.train_dataset, generator=torch.Generator(device=self.args.device))
+            return RandomSampler(self.train_dataset)
 
     def get_train_dataloader(self) -> DataLoader:
         """
@@ -900,7 +899,6 @@ class Trainer:
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
-            "generator": torch.Generator(device=self.args.device),
         }
 
         if not isinstance(train_dataset, torch.utils.data.IterableDataset):
@@ -916,7 +914,7 @@ class Trainer:
         if self.args.use_legacy_prediction_loop:
             if is_torch_xla_available():
                 return SequentialDistributedSampler(
-                    eval_dataset, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal(), generator=torch.Generator(device=self.args.device)
+                    eval_dataset, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal()
                 )
             elif is_sagemaker_mp_enabled():
                 return SequentialDistributedSampler(
@@ -924,13 +922,12 @@ class Trainer:
                     num_replicas=smp.dp_size(),
                     rank=smp.dp_rank(),
                     batch_size=self.args.per_device_eval_batch_size,
-                    generator=torch.Generator(device=self.args.device),
                 )
             else:
-                return SequentialSampler(eval_dataset, generator=torch.Generator(device=self.args.device))
+                return SequentialSampler(eval_dataset)
 
         if self.args.world_size <= 1:
-            return SequentialSampler(eval_dataset, generator=torch.Generator(device=self.args.device))
+            return SequentialSampler(eval_dataset)
         else:
             return None
 
@@ -977,7 +974,6 @@ class Trainer:
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
-            "generator": torch.Generator(device=self.args.device)
         }
 
         if not isinstance(eval_dataset, torch.utils.data.IterableDataset):
@@ -1020,7 +1016,6 @@ class Trainer:
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
-            "generator: torch.Generator(device=self.args.device),
         }
 
         if not isinstance(test_dataset, torch.utils.data.IterableDataset):
